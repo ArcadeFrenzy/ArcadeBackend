@@ -1,0 +1,15 @@
+﻿@ArcadeBackend_HostAddress = http://localhost:5066
+
+POST {{ArcadeBackend_HostAddress}}/auth
+Content-Type: application/json
+
+{
+  "host": "a",
+  "port": "1",
+  "username": "test"
+}
+###
+
+GET {{ArcadeBackend_HostAddress}}/connect
+
+###
