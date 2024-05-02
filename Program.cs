@@ -1,12 +1,17 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 
 namespace ArcadeBackend
 {
     public class Program
     {
-        private static List<Client> clients = new List<Client>();
+        private static Client hostClient;
+
+        public class UsernameEntry
+        {
+            public string username { get; set; }
+        }
 
         public static void Main(string[] args)
         {
@@ -26,26 +31,41 @@ namespace ArcadeBackend
                 context.Request.EnableBuffering();
                 return next();
             });
-
-            app.MapPost("/auth", (Client client, AppDbContext dbContext) =>
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
-                /*
-                User? user = dbContext.Users.Where(user => user.Username.Equals(username)).FirstOrDefault();
+                ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+            });
 
-                if(user == null)
+            app.MapPost("/auth", (UsernameEntry username, AppDbContext dbContext, HttpContext context) =>
+            {
+                return Results.Accepted();
+            });
+
+            app.MapPost("/host", (Client client, HttpContext context) =>
+            {
+                IPAddress ipAddress = context.Connection.RemoteIpAddress;
+
+                string ip = ipAddress.ToString();
+
+                if (ip == "::1")
                 {
-                    user = new User();
-                    user.Username = client.username;
-
-                    dbContext.Users.Add(user);
-                    dbContext.SaveChangesAsync();
+                    ip = "127.0.0.1";
                 }
-                */
 
-                var clientsCopy = new List<Client>(clients);
-                clients.Add(client);
+                client.Host = ip;
+                hostClient = client;
+            });
 
-                return Results.Accepted("/auth", clientsCopy);
+            app.MapGet("/connect", () =>
+            {
+                if (hostClient != null)
+                {
+                    return Results.Accepted("/connect", hostClient);
+                }
+                else
+                {
+                    return Results.Accepted("/connect", null);
+                }
             });
 
             app.Run();
