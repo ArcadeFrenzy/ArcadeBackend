@@ -1,36 +1,71 @@
+using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Net.Sockets;
+
 namespace ArcadeBackend
 {
     public class Program
     {
+        private static Client hostClient;
+
+        public class UsernameEntry
+        {
+            public string username { get; set; }
+        }
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
             builder.Services.AddAuthorization();
+            builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
 
             app.UseAuthorization();
-
-            var summaries = new[]
+            app.Use((context, next) =>
             {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
-
-            app.MapGet("/weatherforecast", (HttpContext httpContext) =>
+                context.Request.EnableBuffering();
+                return next();
+            });
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
-                var forecast = Enumerable.Range(1, 5).Select(index =>
-                    new WeatherForecast
-                    {
-                        Date = DateTime.Now.AddDays(index),
-                        TemperatureC = Random.Shared.Next(-20, 55),
-                        Summary = summaries[Random.Shared.Next(summaries.Length)]
-                    })
-                    .ToArray();
-                return forecast;
+                ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+            });
+
+            app.MapPost("/auth", (UsernameEntry username, AppDbContext dbContext, HttpContext context) =>
+            {
+                return Results.Accepted();
+            });
+
+            app.MapPost("/host", (Client client, HttpContext context) =>
+            {
+                IPAddress ipAddress = context.Connection.RemoteIpAddress;
+
+                string ip = ipAddress.ToString();
+
+                if (ip == "::1")
+                {
+                    ip = "127.0.0.1";
+                }
+
+                client.Host = ip;
+                hostClient = client;
+            });
+
+            app.MapGet("/connect", () =>
+            {
+                if (hostClient != null)
+                {
+                    return Results.Accepted("/connect", hostClient);
+                }
+                else
+                {
+                    return Results.Accepted("/connect", null);
+                }
             });
 
             app.Run();
