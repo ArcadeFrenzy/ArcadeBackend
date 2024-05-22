@@ -10,6 +10,7 @@ namespace ArcadeServer
         public string playerName;
 
         public Vector3 location = Vector3.Zero;
+        public bool alive = false;
 
         public Player(Client client, int playerId, string playerName)
         {

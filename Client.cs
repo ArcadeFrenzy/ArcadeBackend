@@ -10,6 +10,7 @@ namespace ArcadeServer
     public class Client
     {
         public int playerId;
+        public long lastKeepAliveTime;
 
         private readonly TcpClient client;
         private readonly BinaryWriter writer;
@@ -20,14 +21,22 @@ namespace ArcadeServer
             this.client = client;
             this.writer = new BinaryWriter(client.GetStream());
             this.reader = new BinaryReader(client.GetStream());
+            this.lastKeepAliveTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 
         public void SendCommand(Command command)
         {
-            command.EncodeCommand(this.writer);
-            this.writer.Flush();
+            try
+            {
+                command.EncodeCommand(this.writer);
+                this.writer.Flush();
 
-            Console.WriteLine($"Sent server command {command.GetType().Name}.");
+                Console.WriteLine($"Sent server command {command.GetType().Name}.");
+            }
+            catch(IOException)
+            {
+                // Error on sending command, do nothing as player may have disconnected.
+            }
         }
 
         public void ProcessLoop()

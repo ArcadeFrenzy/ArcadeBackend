@@ -27,7 +27,13 @@
             client.SendCommand(new ServerHelloCommand(player.playerId));
             client.playerId = player.playerId;
 
-            client.SendCommand(new PlayerListCommand(ArcadeServer.players.Values.Where(player => player.playerId != client.playerId).ToList()));
+            var players = ArcadeServer.players.Values.Where(player => player.playerId != client.playerId).ToList();
+            client.SendCommand(new PlayerListCommand(players));
+
+            foreach(var otherPlayer in players)
+            {
+                otherPlayer.client.SendCommand(new PlayerJoinedCommand(player));
+            }
         }
     }
 }
