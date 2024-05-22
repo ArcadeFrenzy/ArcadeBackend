@@ -12,6 +12,14 @@ namespace ArcadeServer
         public int playerId;
         public long lastKeepAliveTime;
 
+        public Player Player
+        {
+            get
+            {
+                return ArcadeServer.players[playerId];
+            }
+        }
+
         private readonly TcpClient client;
         private readonly BinaryWriter writer;
         private readonly BinaryReader reader;

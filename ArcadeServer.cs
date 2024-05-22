@@ -14,7 +14,9 @@ namespace ArcadeServer
 
         static void Main(string[] args)
         {
+            Games.RegisterAllGames();
             Commands.RegisterAllCommands();
+
             Console.WriteLine("Arcade Frenzy Server starting...");
             
             listener = new TcpListener(IPAddress.Any, 8000);
@@ -77,6 +79,14 @@ namespace ArcadeServer
 
                     clients.RemoveAll(client => inactiveClients.Contains(client.playerId));
                 }
+            }
+        }
+
+        public static void SendCommandToAllExcluding(Client clientToExclude, Command command)
+        {
+            foreach(var client in clients.Where(client => client != clientToExclude))
+            {
+                client.SendCommand(command);
             }
         }
     }
