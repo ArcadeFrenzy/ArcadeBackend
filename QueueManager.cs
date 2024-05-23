@@ -37,8 +37,13 @@
 
                 if (gameQueues[game].Count >= game.PlayerCount)
                 {
+                    Game gameCopy = (Game)Activator.CreateInstance(game.GetType(), true);
                     gameQueues[game].Take(game.PlayerCount).ToList().ForEach(player =>
                     {
+                        player.ready = false;
+                        player.currentGame = gameCopy;
+                        gameCopy.Players.Add(player);
+
                         player.client.SendCommand(new GameQueueCommand(game.SceneName));
                     });
 

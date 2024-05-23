@@ -54,7 +54,11 @@
                     }
                 }
 
-                Console.WriteLine($"Received client command {command.GetType().Name}.");
+                if (command.GetType() != typeof(SetPositionCommand))
+                {
+                    Console.WriteLine($"Received client command {command.GetType().Name}.");
+                }
+
                 command.Process(client);
             }
             catch(EndOfStreamException)

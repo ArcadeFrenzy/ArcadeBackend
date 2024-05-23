@@ -12,6 +12,9 @@ namespace ArcadeServer
         public Vector3 location = Vector3.Zero;
         public bool alive = false;
 
+        public Game currentGame;
+        public bool ready = false;
+
         public Player(Client client, int playerId, string playerName)
         {
             this.client = client;

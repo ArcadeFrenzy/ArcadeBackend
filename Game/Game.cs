@@ -30,6 +30,8 @@
             }
         }
 
+        public List<Player> Players = new List<Player>();
+
         public Game(string gameName, string sceneName, int playerCount)
         {
             this.gameName = gameName;
