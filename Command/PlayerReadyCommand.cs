@@ -24,7 +24,7 @@
                 int playerNumber = 0;
                 client.Player.currentGame.Players.ForEach(player =>
                 {
-                    player.client.SendCommand(new GameStartCommand(playerNumber));
+                    player.client.SendCommand(new GameStartCommand(playerNumber, client.Player.currentGame.Players.Excluding(client.Player).ToList()));
                 });
             }
         }
